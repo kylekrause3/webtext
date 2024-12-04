@@ -1,0 +1,193 @@
+<!-- STARTED WITH THREE.HTML -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>windmill</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <div class="canvas" id="display"></div>
+    <pre id="score"></pre>
+</div>
+</body>
+</html>
+
+<script>
+const canvas = document.getElementById('display');
+
+const CANVAS_WIDTH  = 80
+const CANVAS_HEIGHT = 40
+const BACKGROUND_CHAR = ' '
+const DESIRED_FPS = 45
+let fps = DESIRED_FPS
+
+for (let i = 0; i < CANVAS_HEIGHT; i++) {
+    const linespan = document.createElement('span');
+    linespan.textContent = BACKGROUND_CHAR.repeat(CANVAS_WIDTH);
+    linespan.textContent += '\n';
+    canvas.appendChild(linespan);
+}
+
+function setCharacter(lineIndex, charIndex, char) {
+    linediv = canvas.children[Math.floor(lineIndex)]
+    line = linediv.textContent.substring(0, Math.floor(charIndex)) + char + linediv.textContent.substring(Math.floor(charIndex) + 1);
+    canvas.children[Math.floor(lineIndex)].textContent = line;
+}
+
+function getCharacter(lineIndex, charIndex){
+    return canvas.children[lineIndex].textContent[charIndex]
+}
+
+const APPLE_CHAR = '@'
+
+function spawnApple(){
+    let x = Math.floor(Math.random() * CANVAS_WIDTH)
+    let y = Math.floor(Math.random() * CANVAS_HEIGHT)
+    setCharacter(y, x, APPLE_CHAR)
+}
+
+let horiz_fac = 1
+let vert_fac = 0
+let vertical_slowdown = 0.45
+let inputQueue = []
+document.addEventListener('keydown', function(event) {
+    switch(event.key) {
+        case 'ArrowUp':
+            inputQueue.push('ArrowUp')
+            break;
+        case 'ArrowDown':
+            inputQueue.push('ArrowDown')
+            break;
+        case 'ArrowLeft':
+            inputQueue.push('ArrowLeft')
+            break;
+        case 'ArrowRight':
+            inputQueue.push('ArrowRight')
+            break;
+    }
+});
+
+let x = CANVAS_WIDTH / 2
+let y = CANVAS_HEIGHT / 2
+let snake = [[x, y]]
+snake.push([x - 1, y])
+snake.push([x - 2, y])
+snake.push([x - 3, y])
+snake.push([x - 4, y])
+spawnApple()
+spawnApple()
+spawnApple()
+let score = 5
+document.getElementById('score').textContent = `Score: ${score}`
+const snake_chars = "SNAKE"
+let next_char = 0
+
+
+function tick(){
+    if(inputQueue[0]){
+        switch(inputQueue[0]){
+            case 'ArrowUp':
+                if(horiz_fac != 0){
+                    horiz_fac = 0
+                    vert_fac = -1
+                    fps = DESIRED_FPS * vertical_slowdown
+                }
+                break;
+            case 'ArrowDown':
+                if(horiz_fac != 0){
+                    horiz_fac = 0
+                    vert_fac = 1
+                    fps = DESIRED_FPS * vertical_slowdown
+                }
+                break;
+            case 'ArrowLeft':
+                if(vert_fac != 0){
+                    horiz_fac = -1
+                    vert_fac = 0
+                    fps = DESIRED_FPS
+                }
+                break;
+            case 'ArrowRight':
+                if(vert_fac != 0){
+                    horiz_fac = 1
+                    vert_fac = 0
+                    fps = DESIRED_FPS
+                }
+                break;
+        }
+        inputQueue.shift()
+    }
+    
+    
+    let new_head = [snake[0][0] + horiz_fac, snake[0][1] + vert_fac]
+    if(new_head[0] >= CANVAS_WIDTH){
+        new_head[0] = 0
+    }
+    else if(new_head[0] < 0){
+        new_head[0] = CANVAS_WIDTH - 1
+    }
+    if(new_head[1] >= CANVAS_HEIGHT){
+        new_head[1] = 0
+    }
+    else if(new_head[1] < 0){
+        new_head[1] = CANVAS_HEIGHT - 1
+    }
+    if(getCharacter(new_head[1], new_head[0]) != APPLE_CHAR){
+        if(getCharacter(snake[snake.length - 1][1], snake[snake.length - 1][0]) != APPLE_CHAR){
+            setCharacter(snake[snake.length - 1][1], snake[snake.length - 1][0], BACKGROUND_CHAR);
+        }
+        snake.pop();
+    }
+    else{
+        spawnApple()
+        score += 1
+        document.getElementById('score').textContent = `Score: ${score}`
+    }
+    snake.unshift(new_head);
+
+    setCharacter(new_head[1], new_head[0], snake_chars[next_char]);
+    next_char += 1
+    if(next_char >= snake_chars.length) {
+        next_char = 0
+    }
+}
+
+let frameTimeMillis = 0;
+let previousTimestampMillis = performance.now();
+function update() {
+    const currentTimestampMillis = performance.now();
+    const delta = currentTimestampMillis - previousTimestampMillis;
+    previousTimestampMillis = currentTimestampMillis;
+    frameTimeMillis += delta;
+    if (frameTimeMillis >= (1 / fps) * 1000){
+        tick();
+        frameTimeMillis = 0;
+    }
+    
+    requestAnimationFrame(update);
+}
+
+requestAnimationFrame(update);
+
+</script>
+
+<style>
+.canvas{
+    width: fit-content;
+    border: 1px solid black;
+    font-family: monospace;
+    font-size: large;
+    white-space: pre;
+    display: inline-block;
+}
+
+.container{
+    width:fit-content;
+    height: fit-content;
+}
+</style>
+

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>windmill</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="canvas"></div>
+</body>
+</html>
+
+<script>
+const canvas = document.getElementById('canvas');
+
+const CANVAS_WIDTH  = 80
+const CANVAS_HEIGHT = 20
+const BACKGROUND_CHAR = ' '
+
+for (let i = 0; i < CANVAS_HEIGHT; i++) {
+    const linespan = document.createElement('span');
+    linespan.textContent = BACKGROUND_CHAR.repeat(CANVAS_WIDTH);
+    linespan.textContent += '\n';
+    canvas.appendChild(linespan);
+}
+
+function setCharacter(lineIndex, charIndex, char) {
+    line = canvas.children[lineIndex]
+    line = line.textContent.substring(0, charIndex) + char + line.textContent.substring(charIndex + 1);
+    canvas.children[lineIndex].textContent = line;
+}
+
+let x = CANVAS_WIDTH / 2
+let y = CANVAS_HEIGHT / 2
+let horiz_fac = 1
+let vert_fac = 1
+
+function tick(){
+    setCharacter(y, x, BACKGROUND_CHAR);
+    if(y + vert_fac >= CANVAS_HEIGHT || y + vert_fac < 0){
+        vert_fac *= -1
+    }
+    if(x + horiz_fac >= CANVAS_WIDTH || x + horiz_fac <= 0){
+        horiz_fac *= -1
+    }
+    y += vert_fac;
+    x += horiz_fac;
+    setCharacter(y, x, 'o');
+}
+
+const fps = 60;
+let frameTime = 0;
+let previousTimestampMillis = performance.now();
+function update() {
+    const currentTimestampMillis = performance.now();
+    const delta = currentTimestampMillis - previousTimestampMillis;
+    previousTimestampMillis = currentTimestampMillis;
+    frameTime += delta;
+    if (frameTime >= (1 / fps) * 1000){
+        tick();
+        frameTime = 0;
+    }
+    
+    requestAnimationFrame(update);
+}
+
+requestAnimationFrame(update);
+
+</script>
+
+<style>
+#canvas{
+    width: fit-content;
+    border: 1px solid black;
+    font-family: monospace;
+    font-size: large;
+    white-space: pre;
+}
+</style>
+
